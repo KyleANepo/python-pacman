@@ -6,7 +6,7 @@ from entity import Entity
 from modes import ModeController
 
 class Ghost(Entity):
-    def __init__(self, node, pacman=None):
+    def __init__(self, node, pacman=None, blinky=None):
         Entity.__init__(self, node)
         self.name = GHOST
         self.points = 200
@@ -14,6 +14,8 @@ class Ghost(Entity):
         self.directionMethod = self.goalDirection
         self.pacman = pacman
         self.mode = ModeController(self)
+        self.blinky = blinky
+        self.homeNode = node
 
     def update(self, dt):
         self.mode.update(dt)
