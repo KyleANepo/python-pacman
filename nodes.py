@@ -7,6 +7,18 @@ class Node(object):
     def __init__(self, x, y):
         self.position = Vector2(x, y)
         self.neighbors = {UP:None, DOWN:None, LEFT:None, RIGHT:None, PORTAL:None}
+        self.access = {UP:[PACMAN, BLINKY, PINKY, INKY, CLYDE, FRUIT],
+                       DOWN:[PACMAN, BLINKY, PINKY, INKY, CLYDE, FRUIT],
+                       LEFT:[PACMAN, BLINKY, PINKY, INKY, CLYDE, FRUIT],
+                       RIGHT:[PACMAN, BLINKY, PINKY, INKY, CLYDE, FRUIT]}
+
+    def denyAccess(self, direction, entity):
+        if entity.name in self.access[direction]:
+            self.access[direction].remove(entity.name)
+
+    def allowAccess(self, direction, entity):
+        if entity.name not in self.access[direction]:
+            self.access[direction].append(entity.name)
 
     def render(self, screen):
         for n in self.neighbors.keys():
@@ -16,9 +28,10 @@ class Node(object):
                 pygame.draw.line(screen, WHITE, line_start, line_end, 4)
                 pygame.draw.circle(screen, RED, self.position.asInt(), 12)
 
+
+
 class NodeGroup(object):
     def __init__(self, level):
-        #self.nodeList = []
         self.level = level
         self.nodesLUT = {}
         self.nodeSymbols = ['+', 'P', 'n']
@@ -41,7 +54,7 @@ class NodeGroup(object):
 
     def constructKey(self, x, y):
         return x * TILEWIDTH, y * TILEHEIGHT
-
+    
     def connectHorizontally(self, data, xoffset=0, yoffset=0):
         for row in list(range(data.shape[0])):
             key = None
@@ -83,11 +96,11 @@ class NodeGroup(object):
         if (x, y) in self.nodesLUT.keys():
             return self.nodesLUT[(x, y)]
         return None
-
+    
     def getStartTempNode(self):
         nodes = list(self.nodesLUT.values())
         return nodes[0]
-
+    
     def setPortalPair(self, pair1, pair2):
         key1 = self.constructKey(*pair1)
         key2 = self.constructKey(*pair2)
@@ -107,13 +120,44 @@ class NodeGroup(object):
         self.connectVertically(homedata, xoffset, yoffset)
         self.homekey = self.constructKey(xoffset+2, yoffset)
         return self.homekey
-
+    
     def connectHomeNodes(self, homekey, otherkey, direction):     
         key = self.constructKey(*otherkey)
         self.nodesLUT[homekey].neighbors[direction] = self.nodesLUT[key]
         self.nodesLUT[key].neighbors[direction*-1] = self.nodesLUT[homekey]
 
+    def denyAccess(self, col, row, direction, entity):
+        node = self.getNodeFromTiles(col, row)
+        if node is not None:
+            node.denyAccess(direction, entity)
+
+    def allowAccess(self, col, row, direction, entity):
+        node = self.getNodeFromTiles(col, row)
+        if node is not None:
+            node.allowAccess(direction, entity)
+
+    def denyAccessList(self, col, row, direction, entities):
+        for entity in entities:
+            self.denyAccess(col, row, direction, entity)
+
+    def allowAccessList(self, col, row, direction, entities):
+        for entity in entities:
+            self.allowAccess(col, row, direction, entity)
+
+    def denyHomeAccess(self, entity):
+        self.nodesLUT[self.homekey].denyAccess(DOWN, entity)
+
+    def allowHomeAccess(self, entity):
+        self.nodesLUT[self.homekey].allowAccess(DOWN, entity)
+
+    def denyHomeAccessList(self, entities):
+        for entity in entities:
+            self.denyHomeAccess(entity)
+
+    def allowHomeAccessList(self, entities):
+        for entity in entities:
+            self.allowHomeAccess(entity)
+
     def render(self, screen):
-        #for node in self.nodeList:
         for node in self.nodesLUT.values():
             node.render(screen)

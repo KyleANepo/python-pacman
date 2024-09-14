@@ -11,7 +11,7 @@ class Ghost(Entity):
         self.name = GHOST
         self.points = 200
         self.goal = Vector2()
-        self.directionMethod = self.goalDirection
+        # self.directionMethod = self.goalDirection
         self.pacman = pacman
         self.mode = ModeController(self)
         self.blinky = blinky
@@ -24,7 +24,12 @@ class Ghost(Entity):
         elif self.mode.current is CHASE:
             self.chase()
         Entity.update(self, dt)
-    
+
+    def reset(self):
+        Entity.reset(self)
+        self.points = 200
+        self.directionMethod = self.goalDirection
+
     def scatter(self):
         self.goal = Vector2()
 
@@ -40,6 +45,7 @@ class Ghost(Entity):
     def normalMode(self):
         self.setSpeed(100)
         self.directionMethod = self.goalDirection
+        self.homeNode.denyAccess(DOWN, self)
 
     def spawn(self):
         self.goal = self.spawnNode.position
@@ -54,11 +60,13 @@ class Ghost(Entity):
             self.directionMethod = self.goalDirection
             self.spawn()
 
+
 class Blinky(Ghost):
     def __init__(self, node, pacman=None, blinky=None):
         Ghost.__init__(self, node, pacman, blinky)
         self.name = BLINKY
         self.color = RED
+
 
 class Pinky(Ghost):
     def __init__(self, node, pacman=None, blinky=None):
@@ -71,6 +79,8 @@ class Pinky(Ghost):
 
     def chase(self):
         self.goal = self.pacman.position + self.pacman.directions[self.pacman.direction] * TILEWIDTH * 4
+
+
 
 class Inky(Ghost):
     def __init__(self, node, pacman=None, blinky=None):
@@ -85,6 +95,7 @@ class Inky(Ghost):
         vec1 = self.pacman.position + self.pacman.directions[self.pacman.direction] * TILEWIDTH * 2
         vec2 = (vec1 - self.blinky.position) * 2
         self.goal = self.blinky.position + vec2
+
 
 class Clyde(Ghost):
     def __init__(self, node, pacman=None, blinky=None):
@@ -102,6 +113,7 @@ class Clyde(Ghost):
             self.scatter()
         else:
             self.goal = self.pacman.position + self.pacman.directions[self.pacman.direction] * TILEWIDTH * 4
+
 
 class GhostGroup(object):
     def __init__(self, node, pacman):
@@ -136,9 +148,8 @@ class GhostGroup(object):
             ghost.points = 200
 
     def reset(self):
-        Entity.reset(self)
-        self.points = 200
-        self.directionMethod = self.goalDirection
+        for ghost in self:
+            ghost.reset()
 
     def hide(self):
         for ghost in self:

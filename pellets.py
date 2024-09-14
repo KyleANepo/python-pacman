@@ -18,6 +18,7 @@ class Pellet(object):
             p = self.position.asInt()
             pygame.draw.circle(screen, self.color, p, self.radius)
 
+
 class PowerPellet(Pellet):
     def __init__(self, row, column):
         Pellet.__init__(self, row, column)
@@ -32,6 +33,8 @@ class PowerPellet(Pellet):
         if self.timer >= self.flashTime:
             self.visible = not self.visible
             self.timer = 0
+
+
 
 class PelletGroup(object):
     def __init__(self, pelletfile):
